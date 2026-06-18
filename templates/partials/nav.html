@@ -1,0 +1,52 @@
+{% from 'macros/avatar.html' import avatar %}
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="container-wiki navbar__inner">
+    <a href="{{ url_for('index') }}" class="navbar-brand logo-wordmark"
+       aria-label="WikiSTEM home">
+      <span class="logo-wiki">Wiki</span><span class="logo-stem">STEM</span>
+    </a>
+
+    <button type="button" class="nav-toggle" aria-expanded="false"
+            aria-controls="primary-nav" aria-label="Abrir menú de navegación">
+      <span class="nav-toggle__bar" aria-hidden="true"></span>
+      <span class="nav-toggle__bar" aria-hidden="true"></span>
+      <span class="nav-toggle__bar" aria-hidden="true"></span>
+    </button>
+
+    <ul id="primary-nav" class="navbar__nav" role="menubar">
+      <li><a href="{{ url_for('browse') }}"
+             class="{% if request.endpoint == 'browse' %}is-active{% endif %}">EXPLORAR</a></li>
+      <li><a href="{{ url_for('search') }}"
+             class="{% if request.endpoint == 'search' %}is-active{% endif %}">BUSCAR</a></li>
+      {% if current_user.is_authenticated %}
+        <li><a href="{{ url_for('submit_research') }}">+ INVESTIGACIÓN</a></li>
+        <li><a href="{{ url_for('submit_project') }}">+ PROYECTO</a></li>
+        <li><a href="{{ url_for('dashboard') }}"
+               class="{% if request.endpoint == 'dashboard' %}is-active{% endif %}">PANEL</a></li>
+        {% if current_user.role == 'admin' %}
+        <li><a href="{{ url_for('admin') }}"
+               class="{% if request.endpoint and request.endpoint.startswith('admin') %}is-active{% endif %}"
+               style="color: var(--color-yellow);">ADMIN</a></li>
+        {% endif %}
+        <li>
+          <a href="{{ url_for('profile', username=current_user.username) }}"
+             aria-label="View your profile">
+            {{ avatar(current_user, size='nav') }}
+          </a>
+        </li>
+        <li>
+          {# logout_form is injected globally — see backend §6.5 #}
+          <form action="{{ url_for('logout') }}" method="POST" class="navbar__logout-form"
+                data-confirm-logout>
+            {{ logout_form.csrf_token }}
+            <button type="submit" class="navbar__logout-btn"
+                    aria-label="Cerrar sesión en WikiSTEM">CERRAR SESIÓN</button>
+          </form>
+        </li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}">INGRESAR</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn-yellow btn-yellow--sm">REGISTRARSE</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>

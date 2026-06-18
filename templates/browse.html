@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+{% from 'macros/avatar.html' import avatar %}
+
+{% block title %}Explorar — WikiSTEM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('EXPLORAR', px=4, color='#F5E642') }}</h1>
+
+    {# Track totals strip — dynamic from the totals dict #}
+    <nav class="track-totals" role="tablist" aria-label="Filtrar por pista">
+      <a href="{{ url_for('browse') }}"
+         class="track-totals__pill {% if not active_track %}is-active{% endif %}"
+         role="tab" aria-selected="{{ 'true' if not active_track else 'false' }}">
+        <span class="track-totals__count">{{ totals.all if totals else 0 }}</span>
+        <span class="track-totals__label">TODOS</span>
+      </a>
+      <a href="{{ url_for('browse', track='research') }}"
+         class="track-totals__pill track-totals__pill--research
+                {% if active_track == 'research' %}is-active{% endif %}"
+         role="tab" aria-selected="{{ 'true' if active_track == 'research' else 'false' }}">
+        <span class="track-totals__count">{{ totals.research if totals else 0 }}</span>
+        <span class="track-totals__label">INVESTIGACIONES</span>
+      </a>
+      <a href="{{ url_for('browse', track='project') }}"
+         class="track-totals__pill track-totals__pill--project
+                {% if active_track == 'project' %}is-active{% endif %}"
+         role="tab" aria-selected="{{ 'true' if active_track == 'project' else 'false' }}">
+        <span class="track-totals__count">{{ totals.project if totals else 0 }}</span>
+        <span class="track-totals__label">PROYECTOS</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<section class="browse">
+  <div class="container-wiki browse__grid">
+
+    <aside class="browse__sidebar" aria-label="Filtros">
+      <h2 class="browse__sidebar-title">CATEGORÍAS</h2>
+      <ul class="browse__cat-list">
+        <li>
+          <a href="{{ url_for('browse', track=active_track, sort=active_sort) }}"
+             class="{% if not active_category %}is-active{% endif %}">Todas</a>
+        </li>
+        {% for cat in categories %}
+          <li>
+            <a href="{{ url_for('browse', track=active_track, category=cat, sort=active_sort) }}"
+               class="{% if active_category == cat %}is-active{% endif %}">{{ cat }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </aside>
+
+    <div class="browse__results">
+      <div class="browse__toolbar">
+        <span class="browse__count">
+          {% if submissions and submissions.total is defined %}
+            {{ pixel_text(submissions.total|string ~ ' RESULTADOS', px=2) }}
+          {% else %}
+            {{ pixel_text('0 RESULTADOS', px=2) }}
+          {% endif %}
+        </span>
+        <form method="GET" action="{{ url_for('browse') }}" class="browse__sort">
+          <input type="hidden" name="track" value="{{ active_track }}">
+          {% if active_category %}
+          <input type="hidden" name="category" value="{{ active_category }}">
+          {% endif %}
+          <label for="sort" class="sr-only">Ordenar por</label>
+          <select name="sort" id="sort" onchange="this.form.submit()">
+            <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Más recientes</option>
+            <option value="views"  {% if active_sort == 'views' %}selected{% endif %}>Más vistas</option>
+          </select>
+        </form>
+      </div>
+
+      {% if submissions and submissions.items %}
+        <div class="cards-grid">
+          {% for item in submissions.items %}
+            {% include 'partials/card.html' %}
+          {% endfor %}
+        </div>
+
+        {# Pagination at bottom #}
+        <nav class="pagination" aria-label="Paginación">
+          {% if submissions.has_prev %}
+            <a href="{{ url_for('browse', track=active_track, category=active_category,
+                                sort=active_sort, page=submissions.prev_num) }}">← Anterior</a>
+          {% endif %}
+          <span class="pagination__current">Página {{ submissions.page }} de {{ submissions.pages }}</span>
+          {% if submissions.has_next %}
+            <a href="{{ url_for('browse', track=active_track, category=active_category,
+                                sort=active_sort, page=submissions.next_num) }}">Siguiente →</a>
+          {% endif %}
+        </nav>
+      {% else %}
+        <p class="browse__empty">No hay trabajos que coincidan con estos filtros.</p>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

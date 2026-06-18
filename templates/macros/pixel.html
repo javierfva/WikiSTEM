@@ -1,0 +1,27 @@
+{# templates/macros/pixel.html #}
+{% macro pixel_wordmark(px=3, wiki='#F0F0F0', stem='#F5E642') %}
+  <svg width="{{ 47 * px }}" height="{{ 7 * px }}"
+       viewBox="0 0 47 7" shape-rendering="crispEdges"
+       style="max-width: 100%; height: auto;"
+       aria-label="WikiSTEM" role="img">
+    {% for p in pixel_wordmark_pixels(wiki, stem) %}
+      <rect x="{{ p.x }}" y="{{ p.y }}" width="1" height="1" fill="{{ p.fill }}"/>
+    {% endfor %}
+  </svg>
+{% endmacro %}
+
+{% macro pixel_text(text, px=2, color=None) %}
+  {% set color = color or '#F0F0F0' %}
+  {% set width = pixel_text_width(text) %}
+  {% set height = pixel_text_height(text) %}
+  {% if width > 0 %}
+    <svg width="{{ width * px }}" height="{{ height * px }}"
+         viewBox="0 0 {{ width }} {{ height }}" shape-rendering="crispEdges"
+         style="max-width: 100%; height: auto;"
+         role="img" aria-label="{{ text }}">
+      {% for p in pixel_text_pixels(text) %}
+        <rect x="{{ p.x }}" y="{{ p.y }}" width="1" height="1" fill="{{ color }}"/>
+      {% endfor %}
+    </svg>
+  {% endif %}
+{% endmacro %}

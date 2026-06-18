@@ -1,0 +1,32 @@
+{# partials/like_row.html — spec §10 / AGENTS.md §5 CSRF rule
+   Depends on context: submission, user_liked (bool), like_count (int)
+   CSRF token read from csrf_token() Jinja global (no |safe needed). #}
+<div class="like-row">
+  {% if current_user.is_authenticated %}
+    <button class="like-btn {% if user_liked %}liked{% endif %}"
+            id="like-btn-{{ submission.id }}"
+            type="button"
+            aria-pressed="{{ 'true' if user_liked else 'false' }}"
+            aria-label="{{ 'Ya no me gusta' if user_liked else 'Me gusta' }} este trabajo"
+            data-url="{{ url_for('like', track=submission.track, slug=submission.slug) }}"
+            data-csrf="{{ csrf_token() }}">
+      <svg class="like-icon" width="16" height="16" viewBox="0 0 24 24"
+           fill="{{ 'currentColor' if user_liked else 'none' }}"
+           stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+      <span class="like-count">{{ like_count }}</span>
+    </button>
+  {% else %}
+    {# Guest: ghost button that redirects to login — backend like route is @login_required #}
+    <a href="{{ url_for('login', next=request.path) }}"
+       class="like-btn"
+       aria-label="Inicia sesión para dar me gusta">
+      <svg class="like-icon" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+      <span class="like-count">{{ like_count }}</span>
+    </a>
+  {% endif %}
+</div>

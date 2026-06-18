@@ -1,0 +1,39 @@
+{# Frontend Spec §8 — PDF viewer partial.
+   Used by templates/research_detail.html. `submission.main_pdf` is a
+   filename inside static/uploads/papers/ (set by helpers.secure_doc_upload). #}
+<div class="pdf-viewer-wrap">
+  <iframe
+    src="{{ url_for('static', filename='uploads/papers/' + submission.main_pdf) }}"
+    class="pdf-embed"
+    title="{{ submission.title }} — Visor PDF"
+    allowfullscreen></iframe>
+  <div class="pdf-fallback">
+    <p>Tu navegador no admite la visualización de PDF en línea. Usa el botón de
+       descarga que aparece debajo.</p>
+  </div>
+</div>
+
+<a href="{{ url_for('static', filename='uploads/papers/' + submission.main_pdf) }}"
+   class="btn-download-pdf" download
+   aria-label="Descargar PDF: {{ submission.title }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+  </svg>
+  Descargar PDF
+</a>
+
+{% if submission.extra_pdfs %}
+  <div class="extra-pdfs">
+    {% for pdf_fname in submission.extra_pdfs.split(',') %}
+      {% set pdf_fname = pdf_fname.strip() %}
+      {% if pdf_fname %}
+        <a href="{{ url_for('static', filename='uploads/papers/' + pdf_fname) }}"
+           class="extra-pdf-link" download>
+          <span class="pdf-icon" aria-hidden="true">PDF</span>
+          Documento de apoyo {{ loop.index }}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}

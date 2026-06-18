@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Configurar 2FA — WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="container-wiki" style="max-width: 420px; margin: var(--space-3xl) auto;">
+  <h1 class="page-header__title" style="text-align: center; margin-bottom: var(--space-lg);">
+    {{ pixel_text('SETUP 2FA', px=4) }}
+  </h1>
+
+  {% if locked %}
+  <div class="form-error" style="margin-bottom: var(--space-lg); text-align: center;">
+    Demasiados intentos fallidos. Inténtalo de nuevo en {{ lock_minutes }} min.
+  </div>
+  {% else %}
+  <p style="margin-bottom: var(--space-md);">
+    Escanea este código QR con una app de autenticación (Google Authenticator,
+    Microsoft Authenticator, Authy, Bitwarden…). Luego escribe el código de 6
+    dígitos que muestra la app para activar la verificación en dos pasos.
+  </p>
+
+  <div style="text-align: center; margin-bottom: var(--space-md);">
+    <img src="{{ qr_data_uri }}" alt="Código QR para 2FA"
+         width="200" height="200"
+         style="image-rendering: pixelated; border: 2px solid var(--color-ink, #000);">
+  </div>
+
+  <p style="margin-bottom: var(--space-lg); font-size: 0.85rem;">
+    ¿No puedes escanear? Introduce esta clave manualmente en tu app:<br>
+    <code style="word-break: break-all;">{{ manual_key }}</code>
+  </p>
+
+  <form method="POST" action="{{ url_for('admin_2fa_setup') }}">
+    {{ form.csrf_token }}
+
+    <div style="margin-bottom: var(--space-lg);">
+      {{ form.code.label }}
+      {{ form.code(autocomplete='one-time-code', inputmode='numeric',
+                   maxlength='6', autofocus=true) }}
+      {% if form.code.errors %}
+        <div class="form-error">{{ form.code.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn-yellow" style="width: 100%;">ACTIVAR 2FA</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

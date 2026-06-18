@@ -1,0 +1,24 @@
+{# partials/feed_row.html — compact feed row for homepage columns (§7.2)
+   Expects: item (Submission ORM object)
+   Parent template must import avatar macro. #}
+<article class="feed-row feed-row--{{ item.track }}">
+  <a href="{{ url_for('research_detail' if item.track == 'research' else 'project_detail', slug=item.slug) }}"
+     class="feed-row__link">
+    <div class="feed-row__thumb" aria-hidden="true">
+      {% if item.cover_image %}
+        <img src="{{ url_for('static', filename='uploads/covers/' ~ item.cover_image) }}"
+             alt="" loading="lazy" width="48" height="48">
+      {% else %}
+        <div class="feed-row__thumb-fallback">
+          {{ item.title[0]|upper }}
+        </div>
+      {% endif %}
+    </div>
+    <div class="feed-row__body">
+      <h3 class="feed-row__title">{{ item.title }}</h3>
+      <p class="feed-row__meta">
+        {{ item.author.username }} · {{ item.author.school }} · {{ item.created_at|format_date }}
+      </p>
+    </div>
+  </a>
+</article>

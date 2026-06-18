@@ -1,0 +1,15 @@
+{# Frontend Spec §13 — owner/admin delete form for a submission.
+   Parent template (research_detail / project_detail) guards inclusion with
+   `current_user.id == submission.author_id or current_user.role == 'admin'`,
+   so this partial does not re-check ownership. CSRF via the globally
+   injected logout_form. #}
+<form action="{{ url_for('delete_submission', track=submission.track, slug=submission.slug) }}"
+      method="POST"
+      class="detail__delete-form"
+      onsubmit="return confirm('¿Estás seguro? Esto no se puede deshacer.')">
+  {{ logout_form.csrf_token }}
+  <button type="submit" class="btn-danger"
+          aria-label="Eliminar {{ submission.title }}">
+    ELIMINAR PUBLICACIÓN
+  </button>
+</form>

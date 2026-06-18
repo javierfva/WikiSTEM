@@ -1,0 +1,19 @@
+{# WikiSTEM | Javier Fernando Vega Alamo | CS50x 2026
+   Templates drafted with assistance from Google Antigravity (Gemini).
+   Architectural and visual decisions authored and reviewed by me. #}
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}500 — Error del servidor · WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="error-page container-wiki">
+  <h1 class="error-page__code">
+    {{ pixel_text('500', px=8, color='#F5E642') }}
+  </h1>
+  <p class="error-page__message">
+    Algo salió mal en el servidor. Inténtalo de nuevo en unos momentos.
+  </p>
+  <a href="{{ url_for('index') }}" class="btn-yellow">VOLVER AL INICIO</a>
+</div>
+{% endblock %}

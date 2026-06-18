@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% from 'macros/avatar.html' import avatar %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Editar perfil — WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('EDITAR PERFIL', px=4, color='#F5E642') }}</h1>
+  </div>
+</div>
+
+<section class="edit-profile container-wiki">
+  <form method="POST"
+        action="{{ url_for('edit_profile') }}"
+        enctype="multipart/form-data"
+        novalidate>
+    {{ form.csrf_token }}
+
+    <div class="edit-profile__grid">
+
+      {# ── LEFT: Avatar uploader ─────────────────────────────────── #}
+      <aside class="edit-profile__avatar-col">
+        <p class="edit-profile__section-label">FOTO DE PERFIL</p>
+
+        <div class="edit-profile__avatar-preview-wrap">
+          {% if current_user.avatar_filename %}
+            <img id="avatar-preview"
+                 src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.avatar_filename) }}"
+                 alt="Tu foto de perfil actual"
+                 class="edit-profile__avatar-preview">
+          {% else %}
+            <span id="avatar-preview-initials"
+                  class="avatar avatar--profile avatar--initials edit-profile__avatar-initials"
+                  aria-hidden="true">
+              {{ current_user.username[0]|upper }}
+            </span>
+            <img id="avatar-preview"
+                 src=""
+                 alt="Vista previa de tu nueva foto de perfil"
+                 class="edit-profile__avatar-preview"
+                 style="display:none;">
+          {% endif %}
+        </div>
+
+        <label class="upload-zone upload-zone--avatar" for="avatar">
+          <span class="upload-zone__icon" aria-hidden="true">📷</span>
+          <span class="upload-zone__text">CAMBIAR FOTO</span>
+          <span class="upload-zone__sub">JPG, PNG, WEBP — MÁX. 2 MB</span>
+          {{ form.avatar(class="upload-zone__input",
+                         id="avatar",
+                         accept="image/jpeg,image/png,image/webp",
+                         data_preview="avatar-preview") }}
+        </label>
+
+        {% if form.avatar.errors %}
+          {% for e in form.avatar.errors %}
+            <p class="form-error">{{ e }}</p>
+          {% endfor %}
+        {% endif %}
+
+        {% if current_user.avatar_filename %}
+          <div class="form-group form-group--check">
+            {{ form.remove_avatar(id="remove_avatar") }}
+            <label for="remove_avatar" class="edit-profile__check-label">
+              Borrar la foto
+            </label>
+          </div>
+        {% endif %}
+      </aside>
+
+      {# ── RIGHT: Text fields ───────────────────────────────────── #}
+      <div class="edit-profile__fields-col">
+
+        {# Bio #}
+        <div class="form-group">
+          {{ form.bio.label(text='Biografía') }}
+          {{ form.bio(class="edit-profile__textarea",
+                      rows=4,
+                      placeholder='Cuéntale a la gente en qué estás trabajando.') }}
+          {% if form.bio.errors %}
+            {% for e in form.bio.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# Bio public toggle #}
+        <div class="form-group form-group--check">
+          {{ form.bio_public(id="bio_public") }}
+          <label for="bio_public" class="edit-profile__check-label">
+            Mostrar biografía públicamente
+          </label>
+          {% if form.bio_public.errors %}
+            {% for e in form.bio_public.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# School #}
+        <div class="form-group">
+          {{ form.school.label(text='Colegio') }}
+          {{ form.school(data_school_select="1") }}
+          {% if form.school.errors %}
+            {% for e in form.school.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# School (other) — visible only when school == 'Other' #}
+        <div class="form-group" data-school-other-wrap{% if form.school.data != 'Other' %} hidden{% endif %}>
+          {{ form.school_other.label(text='¿Cuál es tu colegio?') }}
+          {{ form.school_other(placeholder='Escribe el nombre de tu colegio') }}
+          {% if form.school_other.errors %}
+            {% for e in form.school_other.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# Grade #}
+        <div class="form-group">
+          {{ form.grade.label(text='Grado') }}
+          {{ form.grade(class="") }}
+          {% if form.grade.errors %}
+            {% for e in form.grade.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# Skills / tags #}
+        <div class="form-group">
+          {{ form.skills_tags.label(text='Habilidades / etiquetas') }}
+          {{ form.skills_tags(placeholder='Python, Arduino, Análisis de datos…',
+                              data_tag_counter="5",
+                              data_counter_target="skills-counter") }}
+          <span id="skills-counter" class="edit-profile__counter" aria-live="polite"></span>
+          {% if form.skills_tags.errors %}
+            {% for e in form.skills_tags.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# LinkedIn #}
+        <div class="form-group">
+          {{ form.linkedin_url.label(text='LinkedIn URL') }}
+          {{ form.linkedin_url(type="url",
+                               placeholder='https://linkedin.com/in/…') }}
+          {% if form.linkedin_url.errors %}
+            {% for e in form.linkedin_url.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        {# GitHub #}
+        <div class="form-group">
+          {{ form.github_url.label(text='GitHub URL') }}
+          {{ form.github_url(type="url",
+                             placeholder='https://github.com/…') }}
+          {% if form.github_url.errors %}
+            {% for e in form.github_url.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="edit-profile__submit-row">
+          <button type="submit" class="btn-yellow">GUARDAR CAMBIOS</button>
+          <a href="{{ url_for('profile', username=current_user.username) }}"
+             class="btn-ghost">Cancelar</a>
+        </div>
+
+      </div>{# end fields col #}
+    </div>{# end grid #}
+  </form>
+</section>
+{% endblock %}

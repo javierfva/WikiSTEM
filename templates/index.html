@@ -1,0 +1,88 @@
+{# WikiSTEM | Javier Fernando Vega Alamo | CS50x 2026
+   Templates drafted with assistance from Google Antigravity (Gemini).
+   Architectural and visual decisions authored and reviewed by me. #}
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_wordmark, pixel_text %}
+{% from 'macros/avatar.html' import avatar %}
+
+{% block title %}WikiSTEM — Donde la ciencia estudiantil se hace pública{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container-wiki">
+
+    <div class="hero__logo-slab">
+      {{ pixel_wordmark(px=10) }}
+      <div class="hero__subtitle">
+        {{ pixel_text('REPOSITORIO STEM DEL PERÚ', px=3, color='#F0F0F0') }}
+      </div>
+    </div>
+
+    <div class="stats-strip" role="list" aria-label="Estadísticas de la plataforma">
+      <div class="stats-strip__item" role="listitem">
+        <span class="stats-strip__value">{{ '{:,}'.format(hero_stats.research_count) }}</span>
+        <span class="stats-strip__label">INVESTIGACIONES</span>
+      </div>
+      <div class="stats-strip__divider" aria-hidden="true"></div>
+      <div class="stats-strip__item" role="listitem">
+        <span class="stats-strip__value">{{ '{:,}'.format(hero_stats.project_count) }}</span>
+        <span class="stats-strip__label">PROYECTOS</span>
+      </div>
+      <div class="stats-strip__divider" aria-hidden="true"></div>
+      <div class="stats-strip__item" role="listitem">
+        <span class="stats-strip__value">{{ '{:,}'.format(hero_stats.school_count) }}</span>
+        <span class="stats-strip__label">COLEGIOS</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="home-feed">
+  <div class="container-wiki home-feed__grid">
+
+    <div class="home-feed__column">
+      <h2 class="home-feed__title">
+        <span class="home-feed__dot" style="background:var(--color-teal)" aria-hidden="true"></span>
+        ÚLTIMAS INVESTIGACIONES
+      </h2>
+      {% if recent_research %}
+        <ul class="home-feed__list">
+          {% for item in recent_research %}
+            <li>{% include 'partials/feed_row.html' %}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="home-feed__empty">
+          Aún no hay investigaciones aprobadas. Sé el primero en publicar.
+        </p>
+      {% endif %}
+      <a href="{{ url_for('browse', track='research') }}" class="home-feed__more">
+        VER TODAS LAS INVESTIGACIONES →
+      </a>
+    </div>
+
+    <div class="home-feed__column">
+      <h2 class="home-feed__title">
+        <span class="home-feed__dot" style="background:var(--color-yellow)" aria-hidden="true"></span>
+        ÚLTIMOS PROYECTOS
+      </h2>
+      {% if recent_projects %}
+        <ul class="home-feed__list">
+          {% for item in recent_projects %}
+            <li>{% include 'partials/feed_row.html' %}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="home-feed__empty">
+          Aún no hay proyectos aprobados. Sé el primero en publicar.
+        </p>
+      {% endif %}
+      <a href="{{ url_for('browse', track='project') }}" class="home-feed__more">
+        VER TODOS LOS PROYECTOS →
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

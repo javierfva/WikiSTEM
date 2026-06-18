@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+{% from 'macros/avatar.html' import avatar %}
+
+{% block title %}Gestión de usuarios — WikiSTEM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('USUARIOS', px=4, color='#F5E642') }}</h1>
+    <p style="color: var(--color-muted); font-family: var(--font-mono); margin-top: var(--space-sm);">
+      {{ users|length }} cuentas registradas
+    </p>
+    <p style="margin-top: var(--space-sm);">
+      <a href="{{ url_for('admin') }}" class="btn-ghost" style="padding: 6px 12px; font-size: 11px;">
+        ← COLA DE MODERACIÓN
+      </a>
+    </p>
+  </div>
+</header>
+
+<div class="container-wiki" style="padding-bottom: var(--space-3xl);">
+  <div style="overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);">
+    <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; color: var(--color-white);">
+      <thead style="background: var(--color-surface2); text-align: left;">
+        <tr>
+          <th style="padding: var(--space-sm) var(--space-md);">Usuario</th>
+          <th style="padding: var(--space-sm) var(--space-md);">Colegio</th>
+          <th style="padding: var(--space-sm) var(--space-md);">Rol</th>
+          <th style="padding: var(--space-sm) var(--space-md);">Estado</th>
+          <th style="padding: var(--space-sm) var(--space-md);">Registro</th>
+          <th style="padding: var(--space-sm) var(--space-md); text-align: right;">Vistas</th>
+          <th style="padding: var(--space-sm) var(--space-md);">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          {# Sum views across the user's submissions. submissions is a dynamic
+             relationship, so .all() materialises it once per row. Fine for a
+             CS50 admin panel; if the user count grows past hundreds, move the
+             aggregation into the backend route. #}
+          {% set total_views = u.submissions.all() | map(attribute='views') | sum %}
+          <tr style="border-top: 1px solid var(--color-border); {% if u.is_banned %}opacity: 0.6;{% endif %}">
+            <td style="padding: var(--space-sm) var(--space-md);">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                {{ avatar(u, size='card') }}
+                <a href="{{ url_for('profile', username=u.username) }}"
+                   style="color: var(--color-white);">{{ u.username }}</a>
+              </div>
+            </td>
+            <td style="padding: var(--space-sm) var(--space-md); color: var(--color-muted);">
+              {{ u.school or '—' }}
+            </td>
+            <td style="padding: var(--space-sm) var(--space-md);">
+              <span class="status-badge {% if u.role == 'admin' %}status-badge--approved{% else %}status-badge--pending{% endif %}">
+                {{ u.role|upper }}
+              </span>
+            </td>
+            <td style="padding: var(--space-sm) var(--space-md);">
+              {% if u.is_banned %}
+                <span class="status-badge status-badge--rejected">BANEADO</span>
+              {% else %}
+                <span class="status-badge status-badge--approved">ACTIVO</span>
+              {% endif %}
+            </td>
+            <td style="padding: var(--space-sm) var(--space-md); color: var(--color-muted);">
+              {{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}
+            </td>
+            <td style="padding: var(--space-sm) var(--space-md); text-align: right; color: var(--color-muted);">
+              {{ total_views or 0 }}
+            </td>
+            <td style="padding: var(--space-sm) var(--space-md);">
+              {# Ban toggle. Per spec §7.10, the button renders even for the
+                 current admin — the backend's self-ban guard (§19.7) is the
+                 single source of truth, and the flash explains why it failed. #}
+              <form method="POST" action="{{ url_for('admin_ban', id=u.id) }}" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if u.is_banned %}
+                  <button type="submit" class="btn-yellow btn-yellow--sm">REHABILITAR</button>
+                {% else %}
+                  <button type="submit" class="btn-danger" style="padding: 6px 12px; font-size: 11px;">BANEAR</button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="padding: var(--space-md); text-align: center; color: var(--color-muted);">
+              No hay usuarios registrados.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

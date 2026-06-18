@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+{% block title %}Mi Panel — WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('MI PANEL', px=4, color='#F5E642') }}</h1>
+  </div>
+</div>
+
+<section class="dashboard container-wiki">
+
+  {# ── Quick-action strip ─────────────────────────────────────────── #}
+  <div class="dashboard__actions">
+    <a href="{{ url_for('submit_research') }}" class="btn-yellow btn-yellow--sm">+ INVESTIGACIÓN</a>
+    <a href="{{ url_for('submit_project') }}" class="btn-ghost btn-ghost--sm">+ PROYECTO</a>
+  </div>
+
+  {# ── Status legend — explains the moderation workflow to first-time authors ── #}
+  {% if submissions %}
+  <ul class="dashboard__legend" aria-label="Qué significa cada estado">
+    <li>
+      <span class="status-badge status-badge--pending">PENDIENTE</span>
+      En revisión por el equipo de moderación.
+    </li>
+    <li>
+      <span class="status-badge status-badge--approved">APROBADO</span>
+      Publicado y visible para todos.
+    </li>
+    <li>
+      <span class="status-badge status-badge--rejected">RECHAZADO</span>
+      Revisa el motivo indicado para corregir y volver a publicar.
+    </li>
+  </ul>
+  {% endif %}
+
+  {# ── Submissions table ─────────────────────────────────────────── #}
+  {% if submissions %}
+  <div class="dashboard__table-wrap">
+    <table class="dashboard__table" aria-label="Mis publicaciones">
+      <thead>
+        <tr>
+          <th scope="col">TÍTULO</th>
+          <th scope="col">PISTA</th>
+          <th scope="col">ESTADO</th>
+          <th scope="col">VISTAS</th>
+          <th scope="col">FECHA</th>
+          <th scope="col"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in submissions %}
+        <tr class="dashboard__row{% if item.status == 'rejected' %} dashboard__row--rejected{% endif %}">
+          <td class="dashboard__cell dashboard__cell--title" data-label="TÍTULO">
+            {% if item.status == 'approved' %}
+            <a href="{{ url_for(item.track ~ '_detail', slug=item.slug) }}" class="dashboard__title-link">{{ item.title
+              }}</a>
+            {% else %}
+            <span class="dashboard__title-text">{{ item.title }}</span>
+            {% endif %}
+
+            {# Rejection reason — autoescaped, never |safe — spec §7.8 / AGENTS.md §5 #}
+            {% if item.status == 'rejected' and item.mod_flag_reason %}
+            <p class="dashboard__reject-note">
+              <strong>Motivo del rechazo:</strong> {{ item.mod_flag_reason }}
+            </p>
+            {% endif %}
+          </td>
+
+          <td class="dashboard__cell" data-label="PISTA">
+            {% if item.track == 'research' %}
+            <span class="badge badge--research">INVESTIGACIÓN</span>
+            {% else %}
+            <span class="badge badge--project">PROYECTO</span>
+            {% endif %}
+          </td>
+
+          <td class="dashboard__cell" data-label="ESTADO">
+            {% if item.status == 'pending' %}
+            <span class="status-badge status-badge--pending">PENDIENTE</span>
+            {% elif item.status == 'approved' %}
+            <span class="status-badge status-badge--approved">APROBADO</span>
+            {% elif item.status == 'rejected' %}
+            <span class="status-badge status-badge--rejected">RECHAZADO</span>
+            {% elif item.status == 'flagged' %}
+            <span class="status-badge status-badge--flagged">REVISIÓN</span>
+            {% else %}
+            <span class="status-badge status-badge--pending">{{ item.status|upper }}</span>
+            {% endif %}
+          </td>
+
+          <td class="dashboard__cell dashboard__cell--mono" data-label="VISTAS">
+            {{ item.views }}
+          </td>
+
+          <td class="dashboard__cell dashboard__cell--mono" data-label="FECHA">
+            {{ item.created_at|format_date }}
+          </td>
+
+          <td class="dashboard__cell dashboard__cell--actions" data-label="ACCIONES">
+            <form action="{{ url_for('delete_submission', track=item.track, slug=item.slug) }}" method="POST"
+              class="dashboard__delete-form" onsubmit="return confirm('¿Estás seguro? Esto no se puede deshacer.')">
+              {{ delete_form.csrf_token }}
+              <button type="submit" class="btn-danger btn-danger--sm" aria-label="Eliminar {{ item.title }}">
+                ELIMINAR
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="dashboard__empty">
+    <p>Aún no has publicado nada. ¡Comparte tu trabajo con la comunidad!</p>
+    <a href="{{ url_for('submit_research') }}" class="btn-yellow">PUBLICAR INVESTIGACIÓN</a>
+  </div>
+  {% endif %}
+
+</section>
+{% endblock %}

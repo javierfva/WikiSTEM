@@ -1,0 +1,63 @@
+{# WikiSTEM | Javier Fernando Vega Alamo | CS50x 2026
+   Templates drafted with assistance from Google Antigravity (Gemini).
+   Architectural and visual decisions authored and reviewed by me. #}
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Tabla de Colegios — WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="container-wiki" style="padding: var(--space-3xl) 0;">
+
+  <header class="page-header">
+    <h1 class="page-header__title">
+      {{ pixel_text('CLASIFICACIÓN', px=4, color='#F5E642') }}
+    </h1>
+    <p class="leaderboard__subtitle">
+      Colegios con más trabajos aprobados en WikiSTEM
+    </p>
+  </header>
+
+  {% if schools %}
+    <div style="overflow-x: auto;">
+      <table class="leaderboard-table" aria-label="Tabla de colegios">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">COLEGIO</th>
+            <th scope="col">TOTAL</th>
+            <th scope="col">INVESTIGACIONES</th>
+            <th scope="col">PROYECTOS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in schools %}
+            <tr class="{% if loop.index == 1 %}leaderboard-table__row--first{% elif loop.index == 2 %}leaderboard-table__row--second{% elif loop.index == 3 %}leaderboard-table__row--third{% endif %}">
+              <td class="leaderboard-table__rank">
+                {% if loop.index == 1 %}
+                  <span aria-label="Primer lugar">🥇</span>
+                {% elif loop.index == 2 %}
+                  <span aria-label="Segundo lugar">🥈</span>
+                {% elif loop.index == 3 %}
+                  <span aria-label="Tercer lugar">🥉</span>
+                {% else %}
+                  {{ loop.index }}
+                {% endif %}
+              </td>
+              <td class="leaderboard-table__school">{{ row.school }}</td>
+              <td class="leaderboard-table__count leaderboard-table__count--total">{{ row.total }}</td>
+              <td class="leaderboard-table__count leaderboard-table__count--research">{{ row.research_count }}</td>
+              <td class="leaderboard-table__count leaderboard-table__count--project">{{ row.project_count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--color-muted); font-style: italic; text-align: center; padding: var(--space-3xl) 0;">
+      Aún no hay trabajos aprobados. ¡Sé el primero en publicar!
+    </p>
+  {% endif %}
+
+</div>
+{% endblock %}

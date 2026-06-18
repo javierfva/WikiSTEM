@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% from 'macros/avatar.html' import avatar %}
+{% from 'macros/pixel.html'  import pixel_text %}
+
+{% block title %}{{ user.username }} — WikiSTEM{% endblock %}
+
+{% block content %}
+
+{# ──────────────────────────────── HERO ──────────────────────────────── #}
+<section class="profile-hero" aria-labelledby="profile-username">
+  <div class="container-wiki">
+    <div class="profile-hero__inner">
+
+      {# Avatar #}
+      <div class="profile-hero__avatar-wrap" aria-hidden="true">
+        {{ avatar(user, size='profile') }}
+      </div>
+
+      {# Identity block #}
+      <div class="profile-hero__identity">
+        <h1 class="profile-hero__username" id="profile-username">{{ user.username }}</h1>
+
+        {% if user.school or user.grade %}
+          <p class="profile-hero__school">
+            {% if user.school %}{{ user.school }}{% endif %}
+            {% if user.school and user.grade %} · {% endif %}
+            {% if user.grade %}Grado {{ user.grade }}{% endif %}
+          </p>
+        {% endif %}
+
+        {# Bio — shown only when backend passes a non-empty string (own profile or bio_public) #}
+        {% if bio %}
+          <p class="profile-hero__bio">{{ bio }}</p>
+        {% endif %}
+
+        {# Social links — autoescaped href, rel="nofollow noopener", never |safe — spec §7.11 #}
+        {% if user.linkedin_url or user.github_url %}
+          <div class="profile-hero__social">
+            {% if user.linkedin_url %}
+              <a href="{{ user.linkedin_url }}"
+                 rel="nofollow noopener"
+                 target="_blank"
+                 class="profile-hero__social-link"
+                 aria-label="{{ user.username }} en LinkedIn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                  <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/>
+                  <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+                </svg>
+                LinkedIn
+              </a>
+            {% endif %}
+            {% if user.github_url %}
+              <a href="{{ user.github_url }}"
+                 rel="nofollow noopener"
+                 target="_blank"
+                 class="profile-hero__social-link"
+                 aria-label="{{ user.username }} en GitHub">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/>
+                </svg>
+                GitHub
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {# Skills tags — autoescaped — spec §7.11 #}
+        {% if user.skills_tags %}
+          <div class="profile-hero__skills" aria-label="Habilidades">
+            {% for skill in user.skills_tags.split(',') %}
+              {% set skill = skill.strip() %}
+              {% if skill %}
+                <span class="tag">{{ skill }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {# Edit button — only when viewing own profile #}
+        {% if is_own_profile %}
+          <div class="profile-hero__actions">
+            <a href="{{ url_for('edit_profile') }}" class="btn-ghost btn-ghost--sm">
+              Editar perfil
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Stats strip — spec §6.8 / §7.11 ── #}
+    <div class="stats-strip profile-hero__stats" role="list" aria-label="Estadísticas del perfil">
+      <div class="stats-strip__item" role="listitem">
+        <span class="stats-strip__value">{{ stats.total }}</span>
+        <span class="stats-strip__label">PUBLICACIONES</span>
+      </div>
+      <div class="stats-strip__divider" aria-hidden="true"></div>
+      <div class="stats-strip__item" role="listitem">
+        <span class="stats-strip__value">{{ stats.research }}</span>
+        <span class="stats-strip__label">INVESTIGACIONES</span>
+      </div>
+      <div class="stats-strip__divider" aria-hidden="true"></div>
+      <div class="stats-strip__item" role="listitem">
+        <span class="stats-strip__value">{{ stats.views }}</span>
+        <span class="stats-strip__label">VISTAS TOTALES</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ──────────────────────────────── TABS ──────────────────────────────── #}
+<section class="profile-tabs container-wiki" aria-label="Publicaciones del perfil">
+
+  <nav class="profile-tabs__nav" role="tablist">
+    <a id="tab-research"
+       href="{{ url_for('profile', username=user.username, rpage=research.page, ppage=projects.page) }}"
+       class="profile-tabs__tab {% if request.args.get('tab', 'research') == 'research' %}is-active{% endif %}"
+       role="tab"
+       aria-selected="{{ 'true' if request.args.get('tab', 'research') == 'research' else 'false' }}"
+       aria-controls="panel-research">
+      INVESTIGACIONES
+      <span class="profile-tabs__count">{{ stats.research }}</span>
+    </a>
+    <a id="tab-projects"
+       href="{{ url_for('profile', username=user.username, tab='projects', rpage=research.page, ppage=projects.page) }}"
+       class="profile-tabs__tab {% if request.args.get('tab') == 'projects' %}is-active{% endif %}"
+       role="tab"
+       aria-selected="{{ 'true' if request.args.get('tab') == 'projects' else 'false' }}"
+       aria-controls="panel-projects">
+      PROYECTOS
+    </a>
+  </nav>
+
+  {# ── Research tab panel ── #}
+  <div id="panel-research"
+       class="profile-tabs__panel {% if request.args.get('tab', 'research') != 'research' %}is-hidden{% endif %}"
+       role="tabpanel"
+       aria-labelledby="tab-research">
+    {% if research.items %}
+      <div class="cards-grid">
+        {% for item in research.items %}
+          {% include 'partials/card.html' %}
+        {% endfor %}
+      </div>
+
+      {# Research pagination — ?rpage= param #}
+      {% if research.pages > 1 %}
+        <nav class="pagination" aria-label="Paginación investigaciones">
+          {% if research.has_prev %}
+            <a href="{{ url_for('profile', username=user.username,
+                                tab=request.args.get('tab', 'research'),
+                                rpage=research.prev_num,
+                                ppage=projects.page) }}">← Anterior</a>
+          {% endif %}
+          <span class="pagination__current">Página {{ research.page }} de {{ research.pages }}</span>
+          {% if research.has_next %}
+            <a href="{{ url_for('profile', username=user.username,
+                                tab=request.args.get('tab', 'research'),
+                                rpage=research.next_num,
+                                ppage=projects.page) }}">Siguiente →</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <p class="profile-tabs__empty">Aún no hay investigaciones publicadas.</p>
+    {% endif %}
+  </div>
+
+  {# ── Projects tab panel ── #}
+  <div id="panel-projects"
+       class="profile-tabs__panel {% if request.args.get('tab') != 'projects' %}is-hidden{% endif %}"
+       role="tabpanel"
+       aria-labelledby="tab-projects">
+    {% if projects.items %}
+      <div class="cards-grid">
+        {% for item in projects.items %}
+          {% include 'partials/card.html' %}
+        {% endfor %}
+      </div>
+
+      {# Projects pagination — ?ppage= param #}
+      {% if projects.pages > 1 %}
+        <nav class="pagination" aria-label="Paginación proyectos">
+          {% if projects.has_prev %}
+            <a href="{{ url_for('profile', username=user.username,
+                                tab='projects',
+                                rpage=research.page,
+                                ppage=projects.prev_num) }}">← Anterior</a>
+          {% endif %}
+          <span class="pagination__current">Página {{ projects.page }} de {{ projects.pages }}</span>
+          {% if projects.has_next %}
+            <a href="{{ url_for('profile', username=user.username,
+                                tab='projects',
+                                rpage=research.page,
+                                ppage=projects.next_num) }}">Siguiente →</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <p class="profile-tabs__empty">Aún no hay proyectos publicados.</p>
+    {% endif %}
+  </div>
+
+</section>
+{% endblock %}

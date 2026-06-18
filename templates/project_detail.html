@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+{% from 'macros/avatar.html' import avatar %}
+
+{% block title %}{{ submission.title }} — WikiSTEM{% endblock %}
+
+{% block content %}
+<article class="detail">
+
+  <header class="detail__header container-wiki">
+    <div class="detail__badges">
+      <span class="badge badge--project">PROYECTO</span>
+      <span class="badge badge--category">{{ submission.category }}</span>
+      {% if submission.project_type %}
+        <span class="badge badge--category">{{ submission.project_type }}</span>
+      {% endif %}
+    </div>
+
+    <h1 class="detail__title">{{ submission.title }}</h1>
+
+    <div class="detail__meta">
+      <a href="{{ url_for('profile', username=submission.author.username) }}"
+         class="detail__author">
+        {{ avatar(submission.author, size='card') }}
+        <span>{{ submission.author.username }}</span>
+      </a>
+      <span class="detail__sep">·</span>
+      <span>{{ submission.author.school }}</span>
+      <span class="detail__sep">·</span>
+      <span>{{ submission.created_at|format_date }}</span>
+      <span class="detail__sep">·</span>
+      <span>{{ submission.views }} vistas</span>
+    </div>
+
+    {# Like + share row #}
+    {% include 'partials/like_row.html' %}
+  </header>
+
+  <section class="detail__gallery container-wiki">
+    <a href="{{ url_for('static', filename='uploads/covers/' + submission.cover_image) }}"
+       target="_blank" rel="noopener" class="cover-link"
+       aria-label="Abrir imagen de portada en nueva pestaña">
+      <img src="{{ url_for('static', filename='uploads/covers/' + submission.cover_image) }}"
+           alt="{{ submission.title }} — imagen de portada"
+           class="cover-img">
+    </a>
+
+    {% if submission.extra_images %}
+      <div class="gallery-grid" role="group" aria-label="Galería de imágenes del proyecto">
+        {% for img_fname in submission.extra_images.split(',') %}
+          {% set img_fname = img_fname.strip() %}
+          {% if img_fname %}
+            <a href="{{ url_for('static', filename='uploads/extras/' + img_fname) }}"
+               target="_blank" rel="noopener" class="gallery-item"
+               aria-label="Abrir imagen {{ loop.index }} en nueva pestaña">
+              <img src="{{ url_for('static', filename='uploads/extras/' + img_fname) }}"
+                   alt="{{ submission.title }} — imagen {{ loop.index }}"
+                   class="gallery-img">
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="detail__abstract container-wiki">
+    <h2 class="detail__section-title">{{ pixel_text('DESCRIPCIÓN', px=2, color='#F5E642') }}</h2>
+    <div class="prose">{{ submission.description_html|safe }}</div>
+    
+    {% if submission.code_snippet %}
+      <h2 class="detail__section-title">{{ pixel_text('CÓDIGO', px=2, color='#F5E642') }}</h2>
+      <pre class="code-snippet"><code>{{ submission.code_snippet }}</code></pre>
+    {% endif %}
+    
+    {# Main PDF — shown inline (only PDFs may be embedded; see download_document). #}
+    {% set main_doc = submission.documents_list | selectattr('is_main') | first %}
+    {% if main_doc %}
+      <h2 class="detail__section-title">{{ pixel_text('DOCUMENTO', px=2, color='#F5E642') }}</h2>
+      <div class="pdf-viewer-wrap">
+        <iframe
+          src="{{ url_for('download_document', submission_id=submission.id, filename=main_doc.filename, inline=1) }}"
+          class="pdf-embed"
+          title="{{ submission.title }} — Visor PDF"
+          allowfullscreen></iframe>
+        <div class="pdf-fallback">
+          <p>Tu navegador no admite la visualización de PDF en línea.</p>
+          <a href="{{ url_for('download_document', submission_id=submission.id, filename=main_doc.filename) }}"
+             class="btn-yellow">Descargar PDF</a>
+        </div>
+      </div>
+    {% endif %}
+
+    {# Supplementary documents — download only, any allowed type. #}
+    {% set extra_docs = submission.documents_list | rejectattr('is_main') | list %}
+    {% if extra_docs %}
+      <h2 class="detail__section-title">{{ pixel_text('DOCUMENTOS', px=2, color='#F5E642') }}</h2>
+      <div class="extra-pdfs">
+        {% for doc in extra_docs %}
+          <a href="{{ url_for('download_document', submission_id=submission.id, filename=doc.filename) }}" class="extra-pdf-link">
+            <span class="pdf-icon" aria-hidden="true">DOC</span>
+            {{ doc.original_name }}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="container-wiki">
+    {% include 'partials/ai_panel.html' %}
+  </section>
+
+  {% include 'partials/admin_actions.html' %}
+
+  {% if submission.tags %}
+  <section class="detail__tags container-wiki">
+    {% for tag in submission.tags.split(',') %}
+      <a href="{{ url_for('search', q=tag.strip()) }}" class="tag">#{{ tag.strip() }}</a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if related %}
+  <section class="detail__related container-wiki">
+    <h2 class="detail__section-title">{{ pixel_text('RELACIONADOS', px=3, color='#F5E642') }}</h2>
+    <div class="cards-grid">
+      {% for item in related %}
+        {% include 'partials/card.html' %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if current_user.is_authenticated and
+        (current_user.id == submission.author_id or current_user.role == 'admin') %}
+    <section class="container-wiki detail__owner-actions">
+      {% include 'partials/delete_form.html' %}
+    </section>
+  {% endif %}
+
+</article>
+{% endblock %}

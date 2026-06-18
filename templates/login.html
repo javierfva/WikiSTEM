@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Ingresar — WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="container-wiki" style="max-width: 380px; margin: var(--space-3xl) auto;">
+  <h1 class="page-header__title" style="text-align: center; margin-bottom: var(--space-xl);">
+    {{ pixel_text('SIGN IN', px=4) }}
+  </h1>
+  
+  <form method="POST" action="{{ url_for('login', next=request.args.get('next')) }}">
+    {{ form.csrf_token }}
+    
+    <div style="margin-bottom: var(--space-md);">
+      {{ form.email.label }}
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div class="form-error">{{ form.email.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div style="margin-bottom: var(--space-lg);">
+      {{ form.password.label }}
+      <div class="password-field">
+        {{ form.password }}
+        <button type="button" class="password-toggle" data-password-toggle
+                aria-label="Mostrar contraseña" aria-pressed="false">
+          <span class="password-toggle__text">MOSTRAR</span>
+        </button>
+      </div>
+      {% if form.password.errors %}
+        <div class="form-error">{{ form.password.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn-yellow" style="width: 100%;">INGRESAR</button>
+  </form>
+</div>
+{% endblock %}

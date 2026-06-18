@@ -1,0 +1,89 @@
+{# WikiSTEM | Javier Fernando Vega Alamo | CS50x 2026
+   Templates drafted with assistance from Google Antigravity (Gemini).
+   Architectural and visual decisions authored and reviewed by me. #}
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+{% from 'macros/avatar.html' import avatar %}
+
+{% block title %}{% if q %}Resultados: {{ q }} — WikiSTEM{% else %}Búsqueda — WikiSTEM{% endif %}{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('BUSCAR', px=4, color='#F5E642') }}</h1>
+
+    <form method="GET" action="{{ url_for('search') }}" role="search" class="search-form">
+      <div class="search-form__row">
+        <label for="search-input" class="sr-only">Buscar en WikiSTEM</label>
+        <input type="search"
+               id="search-input"
+               name="q"
+               value="{{ q }}"
+               placeholder="Busca investigaciones, proyectos, etiquetas…"
+               class="search-form__input"
+               autofocus
+               autocomplete="off"
+               aria-label="Buscar en WikiSTEM">
+        <button type="submit" class="btn-yellow search-form__btn" aria-label="Buscar">BUSCAR</button>
+      </div>
+
+      <div class="search-form__filters" role="group" aria-label="Filtrar por tipo">
+        <a href="{{ url_for('search', q=q) }}"
+           class="badge {% if not track %}badge--active{% else %}badge--category{% endif %}"
+           aria-current="{{ 'true' if not track else 'false' }}">TODOS</a>
+        <a href="{{ url_for('search', q=q, track='research') }}"
+           class="badge {% if track == 'research' %}badge--active{% else %}badge--category{% endif %}"
+           aria-current="{{ 'true' if track == 'research' else 'false' }}">INVESTIGACIÓN</a>
+        <a href="{{ url_for('search', q=q, track='project') }}"
+           class="badge {% if track == 'project' %}badge--active{% else %}badge--category{% endif %}"
+           aria-current="{{ 'true' if track == 'project' else 'false' }}">PROYECTO</a>
+      </div>
+    </form>
+  </div>
+</header>
+
+<section class="container-wiki search-results">
+
+  {% if sanitised_empty %}
+    <div class="alert alert-info" role="alert">
+      Tu búsqueda solo contiene caracteres no admitidos. Usa letras, números o términos como ESP-32.
+    </div>
+
+  {% elif q and not results %}
+    <div class="search-empty" role="status">
+      <p class="search-empty__message">
+        Sin resultados para <strong>{{ q }}</strong>.
+        Intenta con otras palabras o términos más generales.
+      </p>
+    </div>
+
+  {% elif results %}
+    {% if fuzzy %}
+      <div class="alert alert-info" role="status">
+        No encontramos coincidencias exactas — mostrando resultados aproximados para <strong>{{ q }}</strong>.
+      </div>
+    {% endif %}
+
+    <p class="search-count">
+      {{ pixel_text(results|length|string ~ ' RESULTADOS', px=2, color='#1FCAAA') }}
+      {% if q %}
+        <span class="search-count__query">
+          para <strong>{{ q }}</strong>
+        </span>
+      {% endif %}
+    </p>
+
+    <div class="cards-grid">
+      {% for item in results %}
+        {% include 'partials/card.html' %}
+      {% endfor %}
+    </div>
+
+  {% elif not q %}
+    <p class="search-empty__message">
+      Escribe algo en el campo de búsqueda para encontrar investigaciones y proyectos.
+    </p>
+  {% endif %}
+
+</section>
+{% endblock %}

@@ -1,0 +1,70 @@
+{# Admin moderation actions, rendered on detail pages so the admin can
+   approve / reject / override after viewing the PDF, gallery, and AI review.
+   Only shown to admins, and only when the submission still needs a decision
+   (pending or flagged). `submission` and `logout_form` are in scope from the
+   parent template / context processor. #}
+{% if current_user.is_authenticated and current_user.role == 'admin'
+      and submission.status in ('pending', 'flagged') %}
+<section class="container-wiki admin-actions" aria-label="Acciones de moderación">
+  <h2 class="detail__section-title" style="color: var(--color-yellow);">
+    MODERACIÓN — {{ submission.status|status_label }}
+  </h2>
+
+  <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: flex-start;">
+
+    {# APROBAR #}
+    <form method="POST" action="{{ url_for('admin_approve', id=submission.id) }}" style="margin: 0;">
+      {{ logout_form.csrf_token }}
+      <button type="submit" class="btn-yellow">APROBAR</button>
+    </form>
+
+    {# ANULAR MARCA — only for flagged items #}
+    {% if submission.status == 'flagged' %}
+    <form method="POST" action="{{ url_for('admin_override', id=submission.id) }}" style="margin: 0;">
+      {{ logout_form.csrf_token }}
+      <button type="submit" class="btn-ghost">ANULAR MARCA DE IA</button>
+    </form>
+    {% endif %}
+
+    {# RE-EJECUTAR MODERACIÓN — when moderation report is missing #}
+    {% if not submission.mod_report %}
+    <form method="POST" action="{{ url_for('admin_remoderate', id=submission.id) }}" style="margin: 0;">
+      {{ logout_form.csrf_token }}
+      <button type="submit" class="btn-ghost">RE-EJECUTAR MODERACIÓN IA</button>
+    </form>
+    {% endif %}
+
+    {# RECHAZAR — opens an inline note form #}
+    <details style="margin: 0; flex-basis: 100%;">
+      <summary style="cursor: pointer; list-style: none; display: inline-block;">
+        <span class="btn-danger" style="display: inline-block;">RECHAZAR</span>
+      </summary>
+      <form method="POST" action="{{ url_for('admin_reject', id=submission.id) }}"
+            style="display: flex; flex-direction: column; gap: var(--space-sm);
+                   margin-top: var(--space-sm); padding: var(--space-md);
+                   background: var(--color-surface2); border-radius: var(--radius-sm);
+                   max-width: 600px;">
+        {{ logout_form.csrf_token }}
+        <label for="reject-note-detail-{{ submission.id }}"
+               style="font-family: var(--font-display); font-size: 11px; color: var(--color-white);">
+          MOTIVO DEL RECHAZO (min. 10, max. 500 caracteres)
+        </label>
+        <textarea id="reject-note-detail-{{ submission.id }}" name="note" rows="3"
+                  minlength="10" maxlength="500" required
+                  style="width: 100%;"
+                  placeholder="Explica al autor qué debe corregir para reenviar"></textarea>
+        <button type="submit" class="btn-danger" style="align-self: flex-start;">
+          CONFIRMAR RECHAZO
+        </button>
+      </form>
+    </details>
+  </div>
+
+  {% if submission.mod_flag_reason %}
+    <p style="color: var(--color-danger); font-family: var(--font-mono); font-size: 12px;
+              margin-top: var(--space-sm);">
+      <strong>Marca de IA:</strong> {{ submission.mod_flag_reason }}
+    </p>
+  {% endif %}
+</section>
+{% endif %}

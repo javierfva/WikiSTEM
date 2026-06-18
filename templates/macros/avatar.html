@@ -1,0 +1,20 @@
+{# templates/macros/avatar.html #}
+
+{# Size dictionary — keys MUST match the CSS class names below. #}
+{% set _AVATAR_SIZES = {'nav': 28, 'card': 22, 'profile': 52} %}
+
+{% macro avatar(user, size='card') %}
+  {% set px = _AVATAR_SIZES.get(size, 22) %}
+  {% if user.avatar_filename %}
+    <img class="avatar avatar--{{ size }}"
+         src="{{ url_for('static', filename='uploads/avatars/' ~ user.avatar_filename) }}"
+         alt=""
+         width="{{ px }}" height="{{ px }}">
+  {% else %}
+    <span class="avatar avatar--{{ size }} avatar--initials"
+          aria-hidden="true"
+          style="width: {{ px }}px; height: {{ px }}px;">
+      {{ user.username[0]|upper }}
+    </span>
+  {% endif %}
+{% endmacro %}

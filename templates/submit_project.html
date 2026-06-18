@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Publicar Proyecto — WikiSTEM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('PUBLICAR PROYECTO', px=4, color='#F5E642') }}</h1>
+  </div>
+</header>
+
+<div class="container-wiki">
+  <form method="POST" action="{{ url_for('submit_project') }}" enctype="multipart/form-data" class="submit-form">
+    {{ form.csrf_token }}
+
+    <aside class="integrity-notice" aria-labelledby="integrity-heading">
+      <h3 class="integrity-notice__title" id="integrity-heading">
+        🔬 AVISO DE INTEGRIDAD ACADÉMICA
+      </h3>
+      <p>WikiSTEM es un archivo de trabajo estudiantil. Todo lo que publiques debe ser tuyo. Si esto es trabajo del colegio (EE, IA, tarea de calificación), avisa a tu profesor o coordinador IB antes de publicarlo — algunos colegios consideran que la publicación previa es divulgación pública.</p>
+      <p><strong>WikiSTEM no es responsable</strong> por violaciones de las políticas de tu colegio o IB sobre publicación previa.</p>
+    </aside>
+
+    <div>
+      {{ form.title.label }}
+      {{ form.title() }}
+      {% for error in form.title.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div>
+      {{ form.description.label }}
+      {{ form.description(rows=10) }}
+      {% for error in form.description.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-grid form-grid--2">
+      <div>
+        {{ form.category.label }}
+        {{ form.category() }}
+        {% for error in form.category.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.project_type.label }}
+        {{ form.project_type() }}
+        {% for error in form.project_type.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      {{ form.tags.label }}
+      {{ form.tags() }}
+      {% for error in form.tags.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div>
+      <label for="cover_image">{{ form.cover_image.label.text }}</label>
+      <label class="upload-zone">
+        <span class="upload-zone__icon" aria-hidden="true">📁</span>
+        <span class="upload-zone__text">HAZ CLIC O ARRASTRA TU IMAGEN DE PORTADA AQUÍ</span>
+        <span class="upload-zone__sub">PNG, JPG, WEBP, GIF — MÁX. 5 MB</span>
+        {{ form.cover_image(class="upload-zone__input", id="cover_image") }}
+      </label>
+      {% for error in form.cover_image.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-grid form-grid--3">
+      <div>
+        <label for="extra_image_1">{{ form.extra_image_1.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">🖼️</span>
+          <span class="upload-zone__text">IMAGEN 1</span>
+          {{ form.extra_image_1(class="upload-zone__input", id="extra_image_1") }}
+        </label>
+        {% for error in form.extra_image_1.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        <label for="extra_image_2">{{ form.extra_image_2.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">🖼️</span>
+          <span class="upload-zone__text">IMAGEN 2</span>
+          {{ form.extra_image_2(class="upload-zone__input", id="extra_image_2") }}
+        </label>
+        {% for error in form.extra_image_2.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        <label for="extra_image_3">{{ form.extra_image_3.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">🖼️</span>
+          <span class="upload-zone__text">IMAGEN 3</span>
+          {{ form.extra_image_3(class="upload-zone__input", id="extra_image_3") }}
+        </label>
+        {% for error in form.extra_image_3.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <label for="main_pdf">{{ form.main_pdf.label.text }}</label>
+      <label class="upload-zone">
+        <span class="upload-zone__icon" aria-hidden="true">📄</span>
+        <span class="upload-zone__text">DOCUMENTO PRINCIPAL (PDF)</span>
+        <span class="upload-zone__sub">Solo los archivos .pdf se muestran incrustados en la página. El resto de documentos (DOCX, PPTX, TXT, MD) quedan disponibles únicamente para descarga.</span>
+        {{ form.main_pdf(class="upload-zone__input", id="main_pdf") }}
+      </label>
+      {% for error in form.main_pdf.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-grid form-grid--3">
+      <div>
+        <label for="document_1">{{ form.document_1.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">📄</span>
+          <span class="upload-zone__text">DOC 1</span>
+          {{ form.document_1(class="upload-zone__input", id="document_1") }}
+        </label>
+        {% for error in form.document_1.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        <label for="document_2">{{ form.document_2.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">📄</span>
+          <span class="upload-zone__text">DOC 2</span>
+          {{ form.document_2(class="upload-zone__input", id="document_2") }}
+        </label>
+        {% for error in form.document_2.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        <label for="document_3">{{ form.document_3.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">📄</span>
+          <span class="upload-zone__text">DOC 3</span>
+          {{ form.document_3(class="upload-zone__input", id="document_3") }}
+        </label>
+        {% for error in form.document_3.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      {{ form.code_snippet.label }}
+      {{ form.code_snippet(rows=8, class="code-snippet-input") }}
+      {% for error in form.code_snippet.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div>
+      {{ form.external_link.label }}
+      {{ form.external_link() }}
+      {% for error in form.external_link.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="submit-form__integrity-confirm">
+      {{ form.integrity_confirmed() }}
+      <label for="integrity_confirmed">
+        {{ form.integrity_confirmed.label.text }}
+      </label>
+      {% for error in form.integrity_confirmed.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn-yellow">PUBLICAR</button>
+  </form>
+</div>
+{% endblock %}

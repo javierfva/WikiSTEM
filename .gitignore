@@ -1,0 +1,21 @@
+# WikiSTEM | Javier Fernando Vega Alamo | CS50x 2026
+
+# Environment & secrets — NEVER commit
+.env
+
+# Database
+wikistem.db
+
+# User uploads (static)
+static/uploads/
+
+# Instance folder (documents served outside static/)
+instance/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/

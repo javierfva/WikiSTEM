@@ -1,0 +1,94 @@
+{# Frontend Spec §6.7 — AI review panel.
+   Track-aware score grid. Header carries the literal model label
+   `gemini-1.5-flash` (AGENTS §6 / Backend §8.1). Admin-only re-run button
+   when no report exists (G2.4). `report` is the parsed AI JSON or None;
+   `logout_form` is injected globally by inject_globals (app.py). #}
+<section class="ai-panel" aria-labelledby="ai-heading">
+  <header class="ai-panel__header">
+    <h2 id="ai-heading" class="ai-panel__title">
+      {{ pixel_text('REVISIÓN IA', px=3, color='#1FCAAA') }}
+      <span class="ai-model">— gemini-2.5-flash</span>
+    </h2>
+    {% if submission.ai_reviewed_at %}
+      <span class="ai-panel__timestamp">
+        {{ submission.ai_reviewed_at|format_date }}
+      </span>
+    {% endif %}
+  </header>
+
+  {% if report %}
+    <div class="ai-panel__scores">
+      {% if submission.track == 'research' %}
+        <div class="ai-score">
+          <span class="ai-score__label">ARGUMENTACIÓN</span>
+          <span class="ai-score__value">{{ report.argumentation_score }}/10</span>
+        </div>
+        <div class="ai-score">
+          <span class="ai-score__label">METODOLOGÍA</span>
+          <span class="ai-score__value">{{ report.methodology_score }}/10</span>
+        </div>
+        <div class="ai-score">
+          <span class="ai-score__label">ESTRUCTURA</span>
+          <span class="ai-score__value">{{ report.structure_score }}/10</span>
+        </div>
+        <div class="ai-score">
+          <span class="ai-score__label">CITAS</span>
+          <span class="ai-score__value">{{ report.citation_quality }}</span>
+        </div>
+      {% else %}
+        <div class="ai-score">
+          <span class="ai-score__label">ORIGINALIDAD</span>
+          <span class="ai-score__value">{{ report.originality_score }}/10</span>
+        </div>
+        <div class="ai-score">
+          <span class="ai-score__label">COMPLETITUD</span>
+          <span class="ai-score__value">{{ report.completeness_score }}/10</span>
+        </div>
+        <div class="ai-score">
+          <span class="ai-score__label">PROF. TÉCNICA</span>
+          <span class="ai-score__value">{{ report.technical_depth }}/10</span>
+        </div>
+        <div class="ai-score">
+          <span class="ai-score__label">IMPACTO</span>
+          <span class="ai-score__value">{{ report.impact_potential }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="ai-panel__columns">
+      <div class="ai-column">
+        <h3 class="ai-column__title">FORTALEZAS</h3>
+        <ul>
+          {% for s in report.strengths %}<li>{{ s }}</li>{% endfor %}
+        </ul>
+      </div>
+      <div class="ai-column">
+        <h3 class="ai-column__title">MEJORAS</h3>
+        <ul>
+          {% for i in report.improvements %}<li>{{ i }}</li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    {% if report.summary %}
+      <p class="ai-panel__summary">{{ report.summary }}</p>
+    {% endif %}
+
+    <aside class="integrity-notice" aria-labelledby="ai-disclaimer-heading">
+      <h3 class="integrity-notice__title" id="ai-disclaimer-heading">
+        🤖 AVISO SOBRE LA REVISIÓN DE IA
+      </h3>
+      <p>Esta revisión fue generada automáticamente por un modelo de lenguaje (gemini-2.5-flash) a partir del título y la descripción del trabajo. Los puntajes y comentarios son orientativos: pueden contener errores, omisiones o interpretaciones imprecisas, y no constituyen una calificación oficial.</p>
+      <p><strong>WikiSTEM no se hace responsable</strong> de decisiones académicas tomadas a partir de esta revisión. No sustituye la retroalimentación de tu profesor, coordinador IB o mentor académico.</p>
+    </aside>
+  {% else %}
+    <p class="ai-panel__pending">Revisión de IA pendiente.</p>
+    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+      <form action="{{ url_for('admin_rereview', id=submission.id) }}"
+            method="POST" class="ai-panel__rereview-form">
+        {{ logout_form.csrf_token }}
+        <button type="submit" class="btn-ghost btn-ghost--sm">RE-EJECUTAR REVISIÓN</button>
+      </form>
+    {% endif %}
+  {% endif %}
+</section>

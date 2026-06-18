@@ -1,0 +1,37 @@
+<article class="card card--{{ item.track }}" data-track="{{ item.track }}">
+  <a href="{{ url_for('research_detail' if item.track == 'research' else 'project_detail', slug=item.slug) }}" class="card__link">
+    <div class="card__cover" aria-hidden="true">
+      {% if item.cover_image %}
+        <img src="{{ url_for('static', filename='uploads/covers/' ~ item.cover_image) }}" alt="" loading="lazy">
+      {% else %}
+        <div class="card__cover-fallback" style="background: linear-gradient(135deg, {% if item.track == 'research' %}#1FCAAA20,#1FCAAA08{% else %}#F5E64220,#F5E64208{% endif %});">
+          <span class="card__cover-letter">{{ item.title[0]|upper }}</span>
+        </div>
+      {% endif %}
+    </div>
+    <div class="card__body">
+      <div class="card__badges">
+        <span class="badge badge--{{ item.track }}">
+          {{ 'INVESTIGACIÓN' if item.track == 'research' else 'PROYECTO' }}
+        </span>
+        <span class="badge badge--category">{{ item.category }}</span>
+      </div>
+      <h3 class="card__title">{{ item.title }}</h3>
+      
+      <div class="card__meta" style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 6px; color: var(--color-white);">
+          {{ avatar(item.author, size='card') }}
+          <span>{{ item.author.username }}</span>
+          <span style="color: var(--color-border);">·</span>
+          <span>{{ item.author.school }}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; color: var(--color-muted);">
+          <span>👁 {{ item.views }} vistas</span>
+          <span style="color: var(--color-border);">·</span>
+          <span>♥ {{ item.like_count }} me gusta</span>
+        </div>
+      </div>
+
+    </div>
+  </a>
+</article>

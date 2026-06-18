@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Verificación 2FA — WikiSTEM{% endblock %}
+
+{% block content %}
+<div class="container-wiki" style="max-width: 380px; margin: var(--space-3xl) auto;">
+  <h1 class="page-header__title" style="text-align: center; margin-bottom: var(--space-lg);">
+    {{ pixel_text('VERIFY 2FA', px=4) }}
+  </h1>
+
+  {% if locked %}
+  <div class="form-error" style="margin-bottom: var(--space-lg); text-align: center;">
+    Demasiados intentos fallidos. Inténtalo de nuevo en {{ lock_minutes }} min.
+  </div>
+  {% else %}
+  <p style="margin-bottom: var(--space-lg);">
+    Introduce el código de 6 dígitos que muestra tu app de autenticación.
+  </p>
+
+  <form method="POST" action="{{ url_for('admin_2fa') }}">
+    {{ form.csrf_token }}
+
+    <div style="margin-bottom: var(--space-lg);">
+      {{ form.code.label }}
+      {{ form.code(autocomplete='one-time-code', inputmode='numeric',
+                   maxlength='6', autofocus=true) }}
+      {% if form.code.errors %}
+        <div class="form-error">{{ form.code.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn-yellow" style="width: 100%;">VERIFICAR</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Publicar Investigación — WikiSTEM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('PUBLICAR INVESTIGACIÓN', px=4, color='#F5E642') }}</h1>
+  </div>
+</header>
+
+<div class="container-wiki">
+  <form method="POST" action="{{ url_for('submit_research') }}" enctype="multipart/form-data" class="submit-form">
+    {{ form.csrf_token }}
+
+    <aside class="integrity-notice" aria-labelledby="integrity-heading">
+      <h3 class="integrity-notice__title" id="integrity-heading">
+        🔬 AVISO DE INTEGRIDAD ACADÉMICA
+      </h3>
+      <p>WikiSTEM es un archivo de trabajo estudiantil. Todo lo que publiques debe ser tuyo. Si esto es trabajo del colegio (EE, IA, tarea de calificación), avisa a tu profesor o coordinador IB antes de publicarlo — algunos colegios consideran que la publicación previa es divulgación pública.</p>
+      <p><strong>WikiSTEM no es responsable</strong> por violaciones de las políticas de tu colegio o IB sobre publicación previa.</p>
+    </aside>
+
+    <div>
+      {{ form.title.label }}
+      {{ form.title() }}
+      {% for error in form.title.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div>
+      {{ form.abstract.label }}
+      {{ form.abstract(rows=6) }}
+      <span id="word-counter" class="form-counter" aria-live="polite"></span>
+      {% for error in form.abstract.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-grid form-grid--2">
+      <div>
+        {{ form.category.label }}
+        {{ form.category() }}
+        {% for error in form.category.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.ib_type.label }}
+        {{ form.ib_type() }}
+        {% for error in form.ib_type.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-grid form-grid--2">
+      <div>
+        {{ form.ib_subject.label }}
+        {{ form.ib_subject() }}
+        {% for error in form.ib_subject.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.word_count.label }}
+        {{ form.word_count() }}
+        {% for error in form.word_count.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-grid form-grid--2">
+      <div>
+        {{ form.academic_year.label }}
+        {{ form.academic_year() }}
+        {% for error in form.academic_year.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.tags.label }}
+        {{ form.tags() }}
+        {% for error in form.tags.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <label for="main_pdf">{{ form.main_pdf.label.text }}</label>
+      <label class="upload-zone">
+        <span class="upload-zone__icon" aria-hidden="true">📄</span>
+        <span class="upload-zone__text">HAZ CLIC O ARRASTRA TU PDF AQUÍ</span>
+        <span class="upload-zone__sub">PDF — MÁX. 10 MB</span>
+        {{ form.main_pdf(class="upload-zone__input", id="main_pdf") }}
+      </label>
+      {% for error in form.main_pdf.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-grid form-grid--2">
+      <div>
+        <label for="extra_pdf_1">{{ form.extra_pdf_1.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">📄</span>
+          <span class="upload-zone__text">PDF ADICIONAL 1</span>
+          {{ form.extra_pdf_1(class="upload-zone__input", id="extra_pdf_1") }}
+        </label>
+        {% for error in form.extra_pdf_1.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        <label for="extra_pdf_2">{{ form.extra_pdf_2.label.text }}</label>
+        <label class="upload-zone">
+          <span class="upload-zone__icon" aria-hidden="true">📄</span>
+          <span class="upload-zone__text">PDF ADICIONAL 2</span>
+          {{ form.extra_pdf_2(class="upload-zone__input", id="extra_pdf_2") }}
+        </label>
+        {% for error in form.extra_pdf_2.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <label for="cover_image">{{ form.cover_image.label.text }}</label>
+      <label class="upload-zone">
+        <span class="upload-zone__icon" aria-hidden="true">📁</span>
+        <span class="upload-zone__text">HAZ CLIC O ARRASTRA TU IMAGEN AQUÍ</span>
+        <span class="upload-zone__sub">PNG, JPG, WEBP — MÁX. 5 MB</span>
+        {{ form.cover_image(class="upload-zone__input", id="cover_image") }}
+      </label>
+      {% for error in form.cover_image.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div>
+      {{ form.external_link.label }}
+      {{ form.external_link() }}
+      {% for error in form.external_link.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="submit-form__integrity-confirm">
+      {{ form.integrity_confirmed() }}
+      <label for="integrity_confirmed">
+        {{ form.integrity_confirmed.label.text }}
+      </label>
+      {% for error in form.integrity_confirmed.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn-yellow">PUBLICAR</button>
+  </form>
+</div>
+{% endblock %}

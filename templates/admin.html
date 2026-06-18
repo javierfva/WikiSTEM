@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+
+{% block title %}Panel de moderación — WikiSTEM{% endblock %}
+
+{% macro mod_row(item, tab) %}
+  {# One row of the queue. `tab` controls which action buttons render. #}
+  <article class="card"
+           style="display: grid;
+                  grid-template-columns: 1fr;
+                  gap: var(--space-sm);
+                  padding: var(--space-md);
+                  margin-bottom: var(--space-md);
+                  border: 1px solid var(--color-border);
+                  border-radius: var(--radius-md);
+                  background: var(--color-surface);">
+
+    {# Header: title + status badge #}
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-md); flex-wrap: wrap;">
+      <div style="min-width: 0;">
+        <h3 style="margin: 0 0 4px 0; color: var(--color-white); font-size: 16px;">
+          <a href="{{ url_for('research_detail' if item.track == 'research' else 'project_detail', slug=item.slug) }}"
+             style="color: var(--color-white); text-decoration: none;">
+            {{ item.title }}
+          </a>
+        </h3>
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm); color: var(--color-muted); font-family: var(--font-mono); font-size: 11px;">
+          <span>👤 <a href="{{ url_for('profile', username=item.author.username) }}"
+                     style="color: var(--color-muted);">{{ item.author.username }}</a></span>
+          <span>·</span>
+          <span>{{ item.author.school or 'sin colegio' }}</span>
+          <span>·</span>
+          <span>{{ (item.updated_at or item.created_at).strftime('%Y-%m-%d %H:%M') }}</span>
+          <span>·</span>
+          <span class="badge badge--{{ item.track }}">
+            {{ 'INVESTIGACIÓN' if item.track == 'research' else 'PROYECTO' }}
+          </span>
+        </div>
+      </div>
+      <span class="status-badge status-badge--{{ item.status }}">{{ item.status|status_label }}</span>
+    </div>
+
+    {# AI status row #}
+    <div style="display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center;
+                font-family: var(--font-mono); font-size: 11px; color: var(--color-muted);
+                padding-top: var(--space-sm); border-top: 1px solid var(--color-border);">
+      <span>
+        <strong style="color: var(--color-white);">MOD IA:</strong>
+        {% if item.mod_report %}
+          OK · {{ item.mod_reviewed_at.strftime('%Y-%m-%d %H:%M') if item.mod_reviewed_at else '' }}
+        {% else %}
+          <span style="color: var(--color-danger);">sin reporte (timeout o pendiente)</span>
+        {% endif %}
+      </span>
+      <span>
+        <strong style="color: var(--color-white);">REVIEW IA:</strong>
+        {% if item.ai_report %}
+          OK · {{ item.ai_reviewed_at.strftime('%Y-%m-%d %H:%M') if item.ai_reviewed_at else '' }}
+        {% else %}
+          <span style="color: var(--color-danger);">sin reporte</span>
+        {% endif %}
+      </span>
+      {% if item.mod_flag_reason %}
+        <span style="flex-basis: 100%; color: var(--color-danger);">
+          <strong>Motivo:</strong> {{ item.mod_flag_reason }}
+        </span>
+      {% endif %}
+    </div>
+
+    {# Actions row — buttons render conditionally by tab + state #}
+    {% if tab != 'rejected' %}
+    <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm); padding-top: var(--space-sm);">
+      {# APROBAR — pending and flagged #}
+      <form method="POST" action="{{ url_for('admin_approve', id=item.id) }}" style="margin: 0;">
+        {{ logout_form.csrf_token }}
+        <button type="submit" class="btn-yellow btn-yellow--sm">APROBAR</button>
+      </form>
+
+      {# RECHAZAR — opens inline RejectForm via <details>. Uses a unique form
+         id per row so multiple notes can be drafted without state clashes. #}
+      <details style="margin: 0;">
+        <summary style="cursor: pointer; list-style: none;">
+          <span class="btn-ghost" style="display: inline-block; padding: 6px 12px; font-size: 11px;">RECHAZAR</span>
+        </summary>
+        <form method="POST" action="{{ url_for('admin_reject', id=item.id) }}"
+              style="display: flex; flex-direction: column; gap: var(--space-sm);
+                     margin-top: var(--space-sm); padding: var(--space-sm);
+                     background: var(--color-surface2); border-radius: var(--radius-sm);">
+          {{ logout_form.csrf_token }}
+          <label for="reject-note-{{ item.id }}"
+                 style="font-family: var(--font-display); font-size: 11px; color: var(--color-white);">
+            MOTIVO (min. 10 caracteres, max. 500)
+          </label>
+          <textarea id="reject-note-{{ item.id }}" name="note" rows="3"
+                    minlength="10" maxlength="500" required
+                    style="width: 100%;"></textarea>
+          <button type="submit" class="btn-danger" style="padding: 6px 12px; font-size: 11px; align-self: flex-start;">
+            CONFIRMAR RECHAZO
+          </button>
+        </form>
+      </details>
+
+      {# ANULAR MARCA — only meaningful for flagged items #}
+      {% if tab == 'flagged' %}
+      <form method="POST" action="{{ url_for('admin_override', id=item.id) }}" style="margin: 0;">
+        {{ logout_form.csrf_token }}
+        <button type="submit" class="btn-ghost" style="padding: 6px 12px; font-size: 11px;">ANULAR MARCA</button>
+      </form>
+      {% endif %}
+
+      {# RE-EJECUTAR IA — re-runs moderation; useful when mod_report is missing
+         (timeout / never ran). Always permitted on pending+flagged. #}
+      {% if not item.mod_report %}
+      <form method="POST" action="{{ url_for('admin_remoderate', id=item.id) }}" style="margin: 0;">
+        {{ logout_form.csrf_token }}
+        <button type="submit" class="btn-ghost" style="padding: 6px 12px; font-size: 11px;">RE-EJECUTAR IA</button>
+      </form>
+      {% endif %}
+
+      {# RE-EJECUTAR REVISION IA — only meaningful on approved items with no
+         ai_report. Backend rejects on non-approved status, so we also gate by
+         status here to avoid showing a button that will always fail. #}
+      {% if not item.ai_report and item.status == 'approved' %}
+      <form method="POST" action="{{ url_for('admin_rereview', id=item.id) }}" style="margin: 0;">
+        {{ logout_form.csrf_token }}
+        <button type="submit" class="btn-ghost" style="padding: 6px 12px; font-size: 11px;">RE-EJECUTAR REVISIÓN IA</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </article>
+{% endmacro %}
+
+{% block content %}
+<header class="page-header">
+  <div class="container-wiki">
+    <h1 class="page-header__title">{{ pixel_text('MODERACIÓN', px=4, color='#F5E642') }}</h1>
+    <p style="color: var(--color-muted); font-family: var(--font-mono); margin-top: var(--space-sm);">
+      Cola de moderación · {{ pending|length }} pendientes ·
+      {{ flagged|length }} marcados · {{ rejected|length }} rechazados
+    </p>
+    <p style="margin-top: var(--space-sm);">
+      <a href="{{ url_for('admin_users') }}" class="btn-ghost" style="padding: 6px 12px; font-size: 11px;">
+        GESTIÓN DE USUARIOS →
+      </a>
+    </p>
+  </div>
+</header>
+
+{# Tab pills — anchor links jump to the section. No JS required. #}
+<nav class="track-totals container-wiki" role="tablist" aria-label="Cola de moderación"
+     style="position: sticky; top: 0; z-index: 5; background: var(--color-bg);
+            padding: var(--space-sm) var(--space-xl);">
+  <a href="#pending" class="track-totals__pill" role="tab">
+    <span class="track-totals__count">{{ pending|length }}</span>
+    <span class="track-totals__label">PENDIENTES</span>
+  </a>
+  <a href="#flagged" class="track-totals__pill track-totals__pill--research" role="tab">
+    <span class="track-totals__count">{{ flagged|length }}</span>
+    <span class="track-totals__label">MARCADOS</span>
+  </a>
+  <a href="#rejected" class="track-totals__pill track-totals__pill--project" role="tab">
+    <span class="track-totals__count">{{ rejected|length }}</span>
+    <span class="track-totals__label">RECHAZADOS</span>
+  </a>
+</nav>
+
+<div class="container-wiki" style="padding-bottom: var(--space-3xl);">
+
+  <section id="pending" aria-labelledby="pending-h" style="scroll-margin-top: 80px;">
+    <h2 id="pending-h" style="color: var(--color-yellow); font-family: var(--font-display); margin-top: var(--space-xl);">
+      PENDIENTES ({{ pending|length }})
+    </h2>
+    {% if pending %}
+      {% for item in pending %}{{ mod_row(item, 'pending') }}{% endfor %}
+    {% else %}
+      <p style="color: var(--color-muted); font-family: var(--font-mono);">No hay trabajos pendientes.</p>
+    {% endif %}
+  </section>
+
+  <section id="flagged" aria-labelledby="flagged-h" style="scroll-margin-top: 80px;">
+    <h2 id="flagged-h" style="color: var(--color-danger); font-family: var(--font-display); margin-top: var(--space-xl);">
+      MARCADOS ({{ flagged|length }})
+    </h2>
+    {% if flagged %}
+      {% for item in flagged %}{{ mod_row(item, 'flagged') }}{% endfor %}
+    {% else %}
+      <p style="color: var(--color-muted); font-family: var(--font-mono);">No hay trabajos marcados por la IA.</p>
+    {% endif %}
+  </section>
+
+  <section id="rejected" aria-labelledby="rejected-h" style="scroll-margin-top: 80px;">
+    <h2 id="rejected-h" style="color: var(--color-muted); font-family: var(--font-display); margin-top: var(--space-xl);">
+      RECHAZADOS ({{ rejected|length }})
+    </h2>
+    {% if rejected %}
+      {% for item in rejected %}{{ mod_row(item, 'rejected') }}{% endfor %}
+    {% else %}
+      <p style="color: var(--color-muted); font-family: var(--font-mono);">No hay trabajos rechazados.</p>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% from 'macros/pixel.html' import pixel_text %}
+{% from 'macros/avatar.html' import avatar %}
+
+{% block title %}{{ submission.title }} — WikiSTEM{% endblock %}
+
+{% block content %}
+<article class="detail">
+
+  <header class="detail__header container-wiki">
+    <div class="detail__badges">
+      <span class="badge badge--research">INVESTIGACIÓN</span>
+      <span class="badge badge--category">{{ submission.category }}</span>
+      {% if submission.ib_type %}
+        <span class="badge badge--category">{{ submission.ib_type }}</span>
+      {% endif %}
+    </div>
+
+    <h1 class="detail__title">{{ submission.title }}</h1>
+
+    <div class="detail__meta">
+      <a href="{{ url_for('profile', username=submission.author.username) }}"
+         class="detail__author">
+        {{ avatar(submission.author, size='card') }}
+        <span>{{ submission.author.username }}</span>
+      </a>
+      <span class="detail__sep">·</span>
+      <span>{{ submission.author.school }}</span>
+      <span class="detail__sep">·</span>
+      <span>{{ submission.created_at|format_date }}</span>
+      <span class="detail__sep">·</span>
+      <span>{{ submission.views }} vistas</span>
+    </div>
+
+    {# Like + share row #}
+    {% include 'partials/like_row.html' %}
+  </header>
+
+  <section class="detail__pdf container-wiki">
+    {% include 'partials/pdf_viewer.html' %}
+  </section>
+
+  <section class="detail__abstract container-wiki">
+    <h2 class="detail__section-title">{{ pixel_text('RESUMEN', px=2, color='#1FCAAA') }}</h2>
+    <div class="prose">{{ submission.description_html|safe }}</div>
+  </section>
+
+  <section class="container-wiki">
+    {% include 'partials/ai_panel.html' %}
+  </section>
+
+  {% include 'partials/admin_actions.html' %}
+
+  {% if submission.tags %}
+  <section class="detail__tags container-wiki">
+    {% for tag in submission.tags.split(',') %}
+      <a href="{{ url_for('search', q=tag.strip()) }}" class="tag">#{{ tag.strip() }}</a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if related %}
+  <section class="detail__related container-wiki">
+    <h2 class="detail__section-title">{{ pixel_text('RELACIONADOS', px=3, color='#1FCAAA') }}</h2>
+    <div class="cards-grid">
+      {% for item in related %}
+        {% include 'partials/card.html' %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if current_user.is_authenticated and
+        (current_user.id == submission.author_id or current_user.role == 'admin') %}
+    <section class="container-wiki detail__owner-actions">
+      {% include 'partials/delete_form.html' %}
+    </section>
+  {% endif %}
+
+</article>
+{% endblock %}
